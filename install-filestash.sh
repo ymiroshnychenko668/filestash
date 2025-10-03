@@ -131,11 +131,17 @@ create_user() {
 build_filestash() {
     log "Building Filestash..."
 
+    # Store current source directory
+    SOURCE_DIR=$(pwd)
+
     # Create installation directory
     mkdir -p "$INSTALL_DIR"
 
-    # Copy source code to installation directory
-    cp -r . "$INSTALL_DIR/"
+    # Copy source code to installation directory (only if not already there)
+    if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
+        cp -r "$SOURCE_DIR"/* "$INSTALL_DIR/"
+        cp -r "$SOURCE_DIR"/.[^.]* "$INSTALL_DIR/" 2>/dev/null || true
+    fi
     cd "$INSTALL_DIR"
 
     # Set PATH for Go
