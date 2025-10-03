@@ -60,6 +60,7 @@ install_dependencies() {
         pkg-config \
         build-essential \
         cmake \
+        rsync \
         ca-certificates
 
     log "System dependencies installed successfully"
@@ -139,8 +140,13 @@ build_filestash() {
 
     # Copy source code to installation directory (only if not already there)
     if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
-        cp -r "$SOURCE_DIR"/* "$INSTALL_DIR/"
-        cp -r "$SOURCE_DIR"/.[^.]* "$INSTALL_DIR/" 2>/dev/null || true
+        # Copy all files and directories, excluding system directories
+        rsync -av --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/run' --exclude='/tmp' \
+              "$SOURCE_DIR"/ "$INSTALL_DIR"/ || {
+            # Fallback to selective copy if rsync fails
+            find "$SOURCE_DIR" -maxdepth 1 -name '[^.]*' -exec cp -r {} "$INSTALL_DIR"/ \;
+            find "$SOURCE_DIR" -maxdepth 1 -name '.[^.]*' -exec cp -r {} "$INSTALL_DIR"/ \; 2>/dev/null || true
+        }
     fi
     cd "$INSTALL_DIR"
 
